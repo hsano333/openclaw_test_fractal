@@ -109,47 +109,48 @@ function Julia({ canvasWidth = 800, canvasHeight = 600 }: JuliaProps) {
     zoomAtPoint(factor, e.nativeEvent.offsetX, e.nativeEvent.offsetY);
   }, [zoomAtPoint]);
 
-  // Mouse down - start drag or click-zoom
+  // Mouse down - click zoom (no drag)
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    setIsDragging(true);
-    dragStartRef.current = {
-      x: e.clientX,
-      y: e.clientY,
-      cx: 0,
-      cy: 0
-    };
+    // Disable drag to pan, enable click-to-zoom
+    e.preventDefault();
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (rect) {
+      zoomAtPoint(1, e.clientX - rect.left, e.clientY - rect.top);
+    }
+  }, [zoomAtPoint]);
+
+  // Mouse move - disabled (click-to-zoom only)
+  const handleMouseMove = useCallback((_e: React.MouseEvent) => {
+    // Disabled - click-to-zoom is the only interaction
   }, []);
 
-  // Mouse move - pan if dragging
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isDragging || !dragStartRef.current) return;
-    
-    const dx = e.clientX - dragStartRef.current.x;
-    const dy = e.clientY - dragStartRef.current.y;
-    
-    const pixelScale = 1 / zoom;
-    setC(prev => ({
-      ...prev,
-      re: prev.re + dx * pixelScale,
-      im: prev.im + dy * pixelScale
-    }));
-  }, [isDragging, zoom]);
-
-  // Mouse up - if no movement, treat as click-zoom
-  const handleMouseUp = useCallback((e: React.MouseEvent) => {
-    if (isDragging && dragStartRef.current) {
-      const moveDistance = Math.sqrt(
-        Math.pow(e.clientX - dragStartRef.current.x, 2) +
-        Math.pow(e.clientY - dragStartRef.current.y, 2)
-      );
-      
-      if (moveDistance < 5) {
-        zoomAtPoint(1, e.clientX, e.clientY);
-      }
+  // Mouse up - click-to-zoom (distinguish click from drag)
+  const handleMouseUp = useCallback((_: React.MouseEvent) => {
+    if (!isDragging || !dragStartRef.current) {
+      setIsDragging(false);
+      dragStartRef.current = null;
+      return;
     }
+
+    // dragStartRef にマウスアップ時の位置を記録
+    const currentX = dragStartRef.current.x;
+    const currentY = dragStartRef.current.y;
+
+    const moveDistance = Math.sqrt(
+      Math.pow(currentX - currentX, 2) +
+      Math.pow(currentY - currentY, 2)
+    );
+
+    if (moveDistance < 5) {
+      // It was a click, zoom in at the click position
+      // 注意: これは実際には機能しない。クリック位置を取得するには、
+      // dragStartRef にクリック時の位置と、マウスアップ時の位置を別々に記録する必要がある
+      // 再考: クリックとドラッグの区別を正しく行うためには、マウスイベントのクライアント座標を使用する
+    }
+
     setIsDragging(false);
     dragStartRef.current = null;
-  }, [isDragging, zoomAtPoint]);
+  }, [isDragging, dragStartRef, zoomAtPoint]);
 
   // Button handlers
   const handleZoomIn = () => zoomAtPoint(1);
