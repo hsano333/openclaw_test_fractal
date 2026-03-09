@@ -20,3 +20,81 @@
   font-size: 20px;
   font-weight: bold;
 }
+
+.tab-controls {
+  margin-bottom: 15px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 4px;
+  border-radius: 12px;
+  display: flex;
+  gap: 4px;
+}
+
+.tab-btn {
+  padding: 10px 24px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #aaa;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+  color: #fff;
+}
+
+.tab-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.tab-btn:active {
+  transform: scale(0.98);
+}
+
+.parameters {
+  margin-top: 15px;
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 8px;
+  color: #eee;
+}
+
+.parameters h3 {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  color: #fff;
+}
+
+.param-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.param-group label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.param-group input[type="number"] {
+  width: 80px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #555;
+  border-radius: 4px;
+  color: #333;
+  font-size: 14px;
+}
+
+.param-group span {
+  color: #aaa;
+  font-size: 13px;
+}
