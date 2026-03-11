@@ -8,7 +8,7 @@ interface BurningShipProps {
 function BurningShip({ canvasWidth = 800, canvasHeight = 600 }: BurningShipProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [viewState, setViewState] = React.useState({
-    zoom: 30,
+    zoom: 50,
     cx: -0.5,
     cy: 0
   });
@@ -177,7 +177,7 @@ function BurningShip({ canvasWidth = 800, canvasHeight = 600 }: BurningShipProps
 
   const handleZoomIn = () => zoomAtPoint(1);
   const handleZoomOut = () => zoomAtPoint(-1);
-  const handleReset = () => setViewState({ zoom: 30, cx: -0.5, cy: 0 });
+  const handleReset = () => setViewState({ zoom: 50, cx: -0.5, cy: 0 });
 
   const formatZoom = (zoom: number) => {
     if (zoom >= 1000) return `x${(zoom / 1000).toFixed(2)}k`;
