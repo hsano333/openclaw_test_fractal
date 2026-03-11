@@ -20,8 +20,8 @@ function useFractalInteractions(
   viewState: ViewState,
   setViewState: React.Dispatch<React.SetStateAction<ViewState>>
 ) {
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStartRef = useRef<{ x: number; y: number; cx: number; cy: number } | null>(null);
+  const [clickStartTime, setClickStartTime] = useState<number | null>(null);
+  const clickStartPos = useRef<{ x: number; y: number } | null>(null);
 
   // Zoom at a specific point
   const zoomAtPoint = useCallback((factor: number, pointX?: number, pointY?: number) => {
@@ -49,20 +49,22 @@ function useFractalInteractions(
     });
   }, [canvasRef, setViewState]);
 
-  // Pan to a specific point
-  const panTo = useCallback((dx: number, dy: number) => {
+  // Center view at a specific point (new functionality)
+  const centerAtPoint = useCallback((pointX: number, pointY: number) => {
     setViewState(prev => {
       const canvas = canvasRef.current;
       if (!canvas) return prev;
       
-      const pixelScale = 1 / prev.zoom;
-      return {
-        ...prev,
-        cx: prev.cx + dx * pixelScale,
-        cy: prev.cy + dy * pixelScale
-      };
+      const rect = canvas.getBoundingClientRect();
+      
+      // Calculate the complex coordinate at the clicked point
+      const clickedCx = (pointX - rect.left - rect.width / 2) / prev.zoom + prev.cx;
+      const clickedCy = (pointY - rect.top - rect.height / 2) / prev.zoom + prev.cy;
+      
+      // Set the center to the clicked coordinate
+      return { ...prev, cx: clickedCx, cy: clickedCy };
     });
-  }, [setViewState]);
+  }, [canvasRef, setViewState]);
 
   // Mouse wheel zoom
   const handleWheel = useCallback((e: React.WheelEvent) => {
@@ -72,46 +74,36 @@ function useFractalInteractions(
     zoomAtPoint(factor, e.nativeEvent.offsetX, e.nativeEvent.offsetY);
   }, [zoomAtPoint]);
 
-  // Mouse down - start drag or click-zoom
+  // Mouse down - record click position and time
+  // Note: viewState is kept in deps for hook consistency, though not directly used
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    setIsDragging(true);
-    dragStartRef.current = {
+    setClickStartTime(Date.now());
+    clickStartPos.current = {
       x: e.clientX,
-      y: e.clientY,
-      cx: viewState.cx,
-      cy: viewState.cy
+      y: e.clientY
     };
   }, [viewState.cx, viewState.cy]);
 
-  // Mouse move - pan if dragging
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isDragging || !dragStartRef.current) return;
-    
-    const dx = e.clientX - dragStartRef.current.x;
-    const dy = e.clientY - dragStartRef.current.y;
-    
-    panTo(dx, dy);
-  }, [isDragging, panTo]);
+  // Mouse move - no panning behavior now
+  const handleMouseMove = useCallback(() => {
+    // Intentionally empty - no dragging/panning
+  }, []);
 
-  // Mouse up - if no movement, treat as click-zoom
+  // Mouse up - center at clicked point
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
-    if (isDragging && dragStartRef.current) {
-      const moveDistance = Math.sqrt(
-        Math.pow(e.clientX - dragStartRef.current.x, 2) +
-        Math.pow(e.clientY - dragStartRef.current.y, 2)
-      );
+    if (clickStartTime !== null && clickStartPos.current) {
+      const clickDuration = Date.now() - clickStartTime;
       
-      // If moved less than 5 pixels, treat as click (zoom in at that point)
-      if (moveDistance < 5) {
-        zoomAtPoint(1, e.clientX, e.clientY);
+      // Only trigger if it was a quick click (less than 250ms)
+      if (clickDuration < 250) {
+        centerAtPoint(e.clientX, e.clientY);
       }
     }
-    setIsDragging(false);
-    dragStartRef.current = null;
-  }, [isDragging, zoomAtPoint]);
+    setClickStartTime(null);
+    clickStartPos.current = null;
+  }, [clickStartTime, centerAtPoint]);
 
   return {
-    isDragging,
     handleWheel,
     handleMouseDown,
     handleMouseMove,
