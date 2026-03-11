@@ -108,8 +108,8 @@ function Mandelbrot({ canvasWidth = 800, canvasHeight = 600 }: MandelbrotProps) 
       const pixelScale = 1 / prev.zoom;
       return {
         ...prev,
-        cx: prev.cx + dx * pixelScale,
-        cy: prev.cy + dy * pixelScale
+        cx: prev.cx + dx * pixelScale * 0.5,  // 50% drag speed
+        cy: prev.cy + dy * pixelScale * 0.5    // 50% drag speed
       };
     });
   }, []);
